@@ -18,11 +18,23 @@ add_library(sphinxsys_opencascade
     opencascade/vector.h
 )
 target_include_directories(sphinxsys_opencascade PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/opencascade>)
+target_include_directories(sphinxsys_opencascade PUBLIC $<INSTALL_INTERFACE:include/sphinxsys_opencascade>)
 target_link_libraries(sphinxsys_opencascade PUBLIC sphinxsys_3d)
 
 # Must list all dependent packages given here https://dev.opencascade.org/doc/refman/html/toolkit_tkstep.html because improper CMake target link visibility
 target_link_libraries(sphinxsys_opencascade PRIVATE TKDESTEP TKXSBase TKShHealing TKTopAlgo TKGeomAlgo TKBRep TKGeomBase) 
 target_link_libraries(sphinxsys_opencascade PUBLIC TKG3d TKG2d TKMath TKernel) 
+
+install(TARGETS sphinxsys_opencascade
+    EXPORT SPHinXsysTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES
+    opencascade/relax_dynamics_surface.h
+    opencascade/surface_shape.h
+    opencascade/vector.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sphinxsys_opencascade)
 
 if(SPHINXSYS_BUILD_TESTS)
     enable_testing()
