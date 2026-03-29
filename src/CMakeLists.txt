@@ -47,6 +47,22 @@ if(SPHINXSYS_2D)
     target_include_directories(sphinxsys_2d PUBLIC $<INSTALL_INTERFACE:include/sphinxsys_2d>)
 
     target_link_libraries(sphinxsys_2d PUBLIC sphinxsys_core)
+
+    # ------ Install sphinxsys_2d and its headers (flat layout matching INSTALL_INTERFACE) ------
+    install(TARGETS sphinxsys_2d
+        EXPORT SPHinXsysTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    foreach(_hdr IN LISTS SPHINXSYS_SHARED_HEADERS SPHINXSYS_2D_HEADERS)
+        install(FILES ${_hdr} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sphinxsys_2d)
+    endforeach()
+    if(SPHINXSYS_USE_SYCL)
+        foreach(_hdr IN LISTS SPHINXSYS_SYCL_HEADERS)
+            install(FILES ${_hdr} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sphinxsys_2d)
+        endforeach()
+    endif()
 endif()
 
 if(SPHINXSYS_3D)
@@ -90,4 +106,20 @@ if(SPHINXSYS_3D)
     target_include_directories(sphinxsys_3d PUBLIC $<INSTALL_INTERFACE:include/sphinxsys_3d>)
 
     target_link_libraries(sphinxsys_3d PUBLIC sphinxsys_core)
+
+    # ------ Install sphinxsys_3d and its headers (flat layout matching INSTALL_INTERFACE) ------
+    install(TARGETS sphinxsys_3d
+        EXPORT SPHinXsysTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    foreach(_hdr IN LISTS SPHINXSYS_SHARED_HEADERS SPHINXSYS_3D_HEADERS)
+        install(FILES ${_hdr} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sphinxsys_3d)
+    endforeach()
+    if(SPHINXSYS_USE_SYCL)
+        foreach(_hdr IN LISTS SPHINXSYS_SYCL_HEADERS)
+            install(FILES ${_hdr} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/sphinxsys_3d)
+        endforeach()
+    endif()
 endif()

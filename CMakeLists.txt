@@ -17,7 +17,7 @@ option(SPHINXSYS_MODULE_OPENCASCADE "Build extension relying on OpenCASCADE" OFF
 option(SPHINXSYS_USE_VTK "Build using VTK library for writing VTP/VTU files" OFF)
 option(SPHINXSYS_USE_SYCL "Build using SYCL acceleration or not" OFF)
 option(SPHINXSYS_USE_ONEDPL_SORTING "Build One DPL for particle sorting" ON)
-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+option(BUILD_SHARED_LIBS "Build shared libraries (default OFF preserves existing static-only behavior)" OFF)
 
 # ------ Global properties (Some cannot be set on INTERFACE targets)
 set(CMAKE_VERBOSE_MAKEFILE OFF CACHE BOOL "Enable verbose compilation commands for Makefile and Ninja" FORCE) # Extra fluff needed for Ninja: https://github.com/ninja-build/ninja/issues/900
@@ -54,7 +54,7 @@ endif()
 target_compile_features(sphinxsys_core INTERFACE cxx_std_17) # Requires a compiler supporting at least C++17
 
 if(${CMAKE_SYSTEM_NAME} MATCHES Windows)
-    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # For correct DLL generation on Windows
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # Global scope required: sphinxsys_core is INTERFACE (no binary), so a target property on it is a no-op
     target_compile_definitions(sphinxsys_core INTERFACE _USE_MATH_DEFINES)
     if(NOT SPHINXSYS_USE_SYCL)
         target_compile_definitions(sphinxsys_core INTERFACE NOMINMAX)
@@ -115,6 +115,9 @@ find_package(Boost QUIET COMPONENTS program_options)
 if(TARGET Boost::program_options)
     target_compile_definitions(sphinxsys_core INTERFACE BOOST_AVAILABLE)
     target_link_libraries(sphinxsys_core INTERFACE Boost::program_options)
+    set(SPHINXSYS_HAS_BOOST_PROGRAM_OPTIONS TRUE)
+else()
+    set(SPHINXSYS_HAS_BOOST_PROGRAM_OPTIONS FALSE)
 endif()
 
 find_package(spdlog CONFIG REQUIRED)
@@ -159,3 +162,33 @@ endif()
 # ------ Extra scripts to install
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/PythonScriptStore/RegressionTest/regression_test_base_tool.py
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/PythonScriptStore/RegressionTest)
+
+# ------ Installation and CMake package support ----
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+# Install the INTERFACE core target (carries compile defs and transitive deps)
+install(TARGETS sphinxsys_core
+    EXPORT SPHinXsysTargets)
+
+# Generate and install the package config + version files
+configure_package_config_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/SPHinXsysConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/SPHinXsysConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SPHinXsys)
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/SPHinXsysConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+# Install the CMake export set (all targets added to SPHinXsysTargets across subdirectories)
+install(EXPORT SPHinXsysTargets
+    FILE SPHinXsysTargets.cmake
+    NAMESPACE SPHinXsys::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SPHinXsys)
+
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/SPHinXsysConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/SPHinXsysConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/SPHinXsys)
